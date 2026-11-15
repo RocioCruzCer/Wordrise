@@ -51,8 +51,14 @@
         }
         else
         {
-            <p class="hero-meta">Done for today · @(round.Result!.Score) pts. Keep training below.</p>
-            <a class="btn btn-ghost-light" asp-action="Round" asp-route-id="@round.RoundId">See result</a>
+            <p class="hero-meta">Done for today · @(round.Result!.Score) pts. A new daily word arrives tomorrow.</p>
+            <div class="row">
+                <form asp-action="Practice" method="post">
+                    <input type="hidden" name="level" value="@round.Level" />
+                    <button type="submit" class="btn btn-accent">Practice a new word</button>
+                </form>
+                <a class="btn btn-ghost-light" asp-action="Round" asp-route-id="@round.RoundId">See today's result</a>
+            </div>
         }
     </section>
 

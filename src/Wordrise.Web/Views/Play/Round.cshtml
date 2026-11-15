@@ -126,7 +126,11 @@
                     }
                     else if (Model.Round.Mode == RoundMode.Daily)
                     {
-                        <a class="btn btn-outline btn-block" asp-controller="Play" asp-action="Index">Keep training</a>
+                        @* Starts (or resumes) a practice round at the same level, instead of going back to the Play hub. *@
+                        <form method="post" asp-controller="Play" asp-action="Practice">
+                            <input type="hidden" name="level" value="@Model.Round.Level" />
+                            <button type="submit" class="btn btn-outline btn-block" id="next-word">Practice a new word</button>
+                        </form>
                         <a class="btn btn-primary btn-block" asp-controller="Home" asp-action="Index">Back to Home</a>
                     }
                     else
