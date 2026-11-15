@@ -2,8 +2,8 @@
 @{
     var days = Model.CurrentStreak == 1 ? "day" : "days";
 }
-<span class="streak" title="Best streak: @Model.BestStreak">
-    <span class="flame" aria-hidden="true">▲</span>
+<span class="streak @(Model.CurrentStreak > 0 ? "is-active" : null)" title="Best streak: @Model.BestStreak">
+    <span class="flame" aria-hidden="true">@await Html.PartialAsync("_Icon", "flame")</span>
     <span>@Model.CurrentStreak-@days streak</span>
     <span class="sr-only">. Best streak: @Model.BestStreak days.</span>
 </span>

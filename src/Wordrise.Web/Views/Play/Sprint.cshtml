@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = "Sprint";
     ViewData["Section"] = "play";
+    ViewData["Focus"] = true;
     var s = Model.Sprint;
 }
 <div class="sprint" data-sprint-id="@s.Id" data-sound="@(Model.SoundEnabled ? "on" : "off")">
@@ -35,7 +36,7 @@
             <label for="answer" class="sr-only">Your answer</label>
             <input id="answer" name="answer" type="text" inputmode="text" autocapitalize="none" spellcheck="false"
                    maxlength="10" placeholder="Type the word" required />
-            <button type="submit" class="btn btn-accent">Check</button>
+            <button type="submit" class="btn btn-accent">Check answer</button>
             <button type="button" id="skip" class="btn btn-outline">Skip</button>
         </form>
         <p id="sprint-message" class="message" role="status" aria-live="assertive"></p>

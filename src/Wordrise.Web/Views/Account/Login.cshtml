@@ -5,7 +5,11 @@
 }
 <div class="auth">
     <section class="auth-hero">
-        <div class="brand big"><img src="~/img/logo.svg" alt="" width="40" height="40" /> <span>Wordrise</span></div>
+        <div class="brand big"><img src="~/img/logo.svg" alt="" width="44" height="44" /> <span>Wordrise</span></div>
+        <div class="demo-tiles" aria-hidden="true">
+            <span style="--i:0">R</span><span style="--i:1">I</span><span class="present" style="--i:2">S</span><span style="--i:3">E</span>
+        </div>
+        <p class="auth-title">Learn a new English word every day.</p>
         <p class="tagline">One word a day. Rise every day.</p>
         <ul class="perks">
             <li>@await Html.PartialAsync("_Icon", "check") Hints that teach, not just reveal</li>

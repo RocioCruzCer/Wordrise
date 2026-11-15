@@ -5,6 +5,7 @@
     var initial = string.IsNullOrEmpty(name) ? "?" : name[..1].ToUpperInvariant();
     var section = ViewData["Section"] as string ?? string.Empty;
     string Current(string s) => s == section ? "page" : "false";
+    var bodyClass = (isAuthenticated ? "app" : "public") + (ViewData["Focus"] is true ? " focus" : string.Empty);
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -27,7 +28,7 @@
     <script src="~/js/theme.js" asp-append-version="true"></script>
     <script src="~/js/pwa.js" asp-append-version="true" defer></script>
 </head>
-<body class="@(isAuthenticated ? "app" : "public")">
+<body class="@bodyClass">
     <a class="skip-link" href="#main">Skip to content</a>
 
     @if (isAuthenticated)

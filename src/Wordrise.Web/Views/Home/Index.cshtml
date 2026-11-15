@@ -19,6 +19,7 @@
 <div class="grid-hero">
     <section class="card hero sky" style="--rise:@((Model.Camp.PercentToNext / 100.0).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture))"
              aria-labelledby="today-title">
+        <span class="hero-stars" aria-hidden="true"></span>
         <p class="eyebrow">Today's word · Level @(round?.Level ?? Model.User.Level)</p>
         @if (round is null)
         {
@@ -54,6 +55,7 @@
 <div class="engage-row">
     <section class="card"><partial name="_GoalRing" model="Model.Goal" /></section>
     <section class="card league-teaser">
+        <span class="bubble" aria-hidden="true">@await Html.PartialAsync("_Icon", "trophy")</span>
         <div>
             <strong>@Model.WeeklyXp XP this week</strong>
             <small class="muted">Climb the weekly league</small>
@@ -61,23 +63,23 @@
         <a class="btn btn-outline btn-sm" asp-controller="League" asp-action="Index">League</a>
     </section>
     <section class="card freeze-card" title="Earn one every 7-day streak (max 2). Used automatically if you miss a day.">
+        <span class="bubble green" aria-hidden="true">@await Html.PartialAsync("_Icon", "shield")</span>
         <div>
             <strong>@Model.User.StreakFreezes / 2 streak shields</strong>
             <small class="muted">Saves your streak if you miss a day</small>
         </div>
-        <span class="shield" aria-hidden="true">🛡️</span>
     </section>
 </div>
 
 <partial name="_StatTiles" model="Model.Stats" />
 
 <section aria-labelledby="review-title">
-    <div class="row between">
+    <div class="row between section-head">
         <h2 id="review-title">Review today</h2>
         @if (Model.ReviewToday.Count > 0)
         {
             <form asp-controller="Play" asp-action="Review" method="post">
-                <button type="submit" class="link-btn">Start review</button>
+                <button type="submit" class="btn btn-outline btn-sm">Start review</button>
             </form>
         }
     </div>

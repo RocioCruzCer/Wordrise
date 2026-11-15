@@ -8,6 +8,7 @@
         _ => "Practice"
     };
     ViewData["Section"] = "play";
+    ViewData["Focus"] = true;
     var isTraining = Model.Round.Mode is RoundMode.Practice or RoundMode.Listening;
     var next = Model.Next;
 }
@@ -50,9 +51,10 @@
                 <li><span class="tile tile-sm absent" aria-hidden="true">×</span> Not in word</li>
             </ul>
 
-            <p id="message" class="message" role="status" aria-live="assertive"></p>
-
-            <div id="keyboard" class="keyboard" aria-label="On-screen keyboard"></div>
+            <div class="kb-dock">
+                <p id="message" class="message" role="status" aria-live="assertive"></p>
+                <div id="keyboard" class="keyboard" aria-label="On-screen keyboard"></div>
+            </div>
         </section>
 
         <aside class="side-panel">

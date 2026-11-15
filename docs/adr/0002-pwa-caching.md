@@ -11,7 +11,8 @@ Se pidió que Wordrise se pueda instalar como PWA. El juego depende del servidor
 
 - `manifest.webmanifest` con íconos 192/512, ícono *maskable*, `display: standalone` y atajos a Play y Progress.
 - Service worker propio (`/sw.js`, sin dependencias):
-  - Recursos estáticos (`/css`, `/js`, `/img`, `/icons`, manifest): *cache-first*. Las URLs llevan `?v=<hash>` (`asp-append-version`), así que un despliegue nuevo nunca sirve código viejo.
+  - Recursos estáticos (`/css`, `/js`, `/img`, `/icons`, `/fonts`, manifest): *cache-first*. Las URLs llevan `?v=<hash>` (`asp-append-version`), así que un despliegue nuevo nunca sirve código viejo.
+  - Las fuentes (`/fonts/*.woff2`, Rubik y Nunito, SIL OFL) se referencian desde el CSS sin `?v=`: si se reemplazan, hay que subir `CACHE_VERSION` en `sw.js`.
   - Navegación: solo red; sin conexión se muestra `/offline.html` (pre-cacheada).
   - `/api/*`, métodos distintos de GET y otros orígenes: no se interceptan.
   - **No se guarda HTML autenticado ni respuestas de la API** en caché.

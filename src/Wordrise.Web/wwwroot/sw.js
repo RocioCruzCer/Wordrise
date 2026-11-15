@@ -1,7 +1,7 @@
 /* Wordrise service worker.
  *
  * Caching policy (see docs/adr/0002-pwa-caching.md):
- * - Static assets (/css, /js, /img, /icons, manifest): cache-first, stored after the first successful fetch.
+ * - Static assets (/css, /js, /img, /icons, /fonts, manifest): cache-first, stored after the first successful fetch.
  *   Razor adds ?v=<hash> to css/js, so a new deploy produces new URLs and never serves stale code.
  * - Page navigations: network-only; when offline, the precached /offline.html is shown.
  *   Authenticated HTML is never cached (it contains the user's name, stats and rounds).
@@ -11,13 +11,15 @@
  */
 "use strict";
 
-const CACHE_VERSION = "v2";
+const CACHE_VERSION = "v3";
 const STATIC_CACHE = `wordrise-static-${CACHE_VERSION}`;
 const MAX_STATIC_ENTRIES = 80;
 
 const PRECACHE_URLS = [
   "/offline.html",
   "/css/site.css",
+  "/fonts/rubik-latin-wght-normal.woff2",
+  "/fonts/nunito-latin-wght-normal.woff2",
   "/js/theme.js",
   "/js/offline.js",
   "/img/logo.svg",
@@ -27,7 +29,7 @@ const PRECACHE_URLS = [
   "/manifest.webmanifest"
 ];
 
-const STATIC_PREFIXES = ["/css/", "/js/", "/img/", "/icons/"];
+const STATIC_PREFIXES = ["/css/", "/js/", "/img/", "/icons/", "/fonts/"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(STATIC_CACHE).then((cache) => cache.addAll(PRECACHE_URLS)));

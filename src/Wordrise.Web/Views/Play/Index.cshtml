@@ -17,8 +17,9 @@
     }
 </header>
 
-<div class="goal-row">
+<div class="goal-row card">
     <partial name="_GoalRing" model="Model.Goal" />
+    <span class="small muted">Every word counts: daily, review or training.</span>
 </div>
 
 @if (training is not null)
@@ -35,6 +36,7 @@
 
 <div class="grid-hero">
     <section class="card hero" aria-labelledby="daily-title">
+        <span class="hero-stars" aria-hidden="true"></span>
         <p class="eyebrow">Daily challenge · Level @(round?.Level ?? Model.User.Level)</p>
         <h2 id="daily-title">Today's word</h2>
         @if (round is null)
@@ -55,6 +57,7 @@
     </section>
 
     <section class="card" aria-labelledby="review-title">
+        <span class="bubble coral" aria-hidden="true">@await Html.PartialAsync("_Icon", "history")</span>
         <h2 id="review-title">Review missed words</h2>
         <p class="muted">@Model.ReviewReady @(Model.ReviewReady == 1 ? "word" : "words") ready, scheduled with spaced repetition.</p>
         <form asp-action="Review" method="post">
@@ -64,9 +67,13 @@
 </div>
 
 <section aria-labelledby="modes-title">
-    <h2 id="modes-title">Training · unlimited</h2>
+    <div class="section-head">
+        <p class="eyebrow">Unlimited</p>
+        <h2 id="modes-title">Training</h2>
+    </div>
     <ul class="cards-row modes">
-        <li class="card">
+        <li class="card mode-practice">
+            <span class="bubble" aria-hidden="true">@await Html.PartialAsync("_Icon", "play")</span>
             <h3>Free practice</h3>
             <p class="muted">A new random word every round. Pick a level and play as many as you want.</p>
             <form asp-action="Practice" method="post" class="mode-form">
@@ -81,6 +88,7 @@
             </form>
         </li>
         <li class="card mode-sprint">
+            <span class="bubble coral" aria-hidden="true">@await Html.PartialAsync("_Icon", "bolt")</span>
             <h3>Sprint · 60 seconds</h3>
             <p class="muted">Unscramble as many words as you can before time runs out. Best: <strong>@Model.BestSprint</strong></p>
             <form asp-action="Sprint" method="post" class="mode-form">
@@ -94,7 +102,8 @@
                 <button type="submit" class="btn btn-accent">Start sprint</button>
             </form>
         </li>
-        <li class="card">
+        <li class="card mode-past">
+            <span class="bubble night" aria-hidden="true">@await Html.PartialAsync("_Icon", "history")</span>
             <h3>Practice past words</h3>
             <p class="muted">Replay words from your earlier daily challenges.</p>
             <form asp-action="Practice" method="post" class="mode-form">
@@ -103,7 +112,8 @@
                 <button type="submit" class="btn btn-primary" disabled="@(Model.PastDailyWords == 0)">Play</button>
             </form>
         </li>
-        <li class="card">
+        <li class="card mode-listen">
+            <span class="bubble green" aria-hidden="true">@await Html.PartialAsync("_Icon", "headphones")</span>
             <h3>Listening challenge</h3>
             <p class="muted">Hear the word first, then spell it. Great for pronunciation and spelling.</p>
             <form asp-action="Listening" method="post" class="mode-form" data-requires-speech>

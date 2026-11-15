@@ -30,7 +30,8 @@
   var STATE_ICON = { Correct: "✓", Present: "•", Absent: "×" };
   var STATE_LABEL = { Correct: "right spot", Present: "in the word", Absent: "not in word" };
   var CHEERS = ["Nice climb!", "One step higher!", "You reached the peak!", "Great rise!"];
-  var ROWS = [["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"], ["a", "s", "d", "f", "g", "h", "j", "k", "l"], ["enter", "z", "x", "c", "v", "b", "n", "m", "del"]];
+  var ROWS = [["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"], ["a", "s", "d", "f", "g", "h", "j", "k", "l"], ["z", "x", "c", "v", "b", "n", "m", "del"]];
+  var CHECK_LABEL = "Check answer";
 
   var current = "";
   var busy = false;
@@ -53,6 +54,8 @@
     var playing = state.status === "InProgress";
     if (giveUpBtn) { giveUpBtn.hidden = !playing; giveUpBtn.disabled = busy; }
     if (listenPanel) { listenPanel.hidden = !playing; }
+    // Lets CSS undock the mobile keyboard so the result card gets the whole screen.
+    container.classList.toggle("is-finished", !playing);
   }
 
   function renderBadge() {
@@ -69,6 +72,7 @@
       row.setAttribute("role", "row");
       var attempt = state.attempts[r];
       var isCurrent = !attempt && r === state.attemptsUsed && state.status === "InProgress";
+      if (isCurrent) { row.classList.add("current"); }
       var rowLabel = [];
 
       for (var c = 0; c < state.wordLength; c++) {
@@ -98,6 +102,7 @@
       if (rowLabel.length) { row.setAttribute("aria-label", "Attempt " + (r + 1) + ": " + rowLabel.join(", ")); }
       board.appendChild(row);
     }
+    updateCheckButton();
   }
 
   function renderHints() {
@@ -152,8 +157,7 @@
         b.type = "button";
         b.className = "key";
         b.dataset.key = k;
-        if (k === "enter") { b.textContent = "Enter"; b.classList.add("wide"); b.setAttribute("aria-label", "Submit guess"); }
-        else if (k === "del") { b.textContent = "Del"; b.classList.add("wide"); b.setAttribute("aria-label", "Delete letter"); }
+        if (k === "del") { b.textContent = "⌫"; b.classList.add("wide"); b.setAttribute("aria-label", "Delete letter"); }
         else {
           b.textContent = k.toUpperCase();
           if (best[k]) {
@@ -166,6 +170,35 @@
       });
       keyboardEl.appendChild(row);
     });
+
+    // Primary action, full width under the keys: clearer than a small "Enter" key.
+    var check = document.createElement("button");
+    check.type = "button";
+    check.id = "check-answer";
+    check.className = "btn btn-accent check-btn";
+    check.dataset.key = "enter";
+    check.disabled = state.status !== "InProgress";
+    keyboardEl.appendChild(check);
+    updateCheckButton();
+  }
+
+  // Shows how many letters are missing; pulses once the word is complete.
+  function updateCheckButton() {
+    var check = document.getElementById("check-answer");
+    if (!check) { return; }
+    var missing = state.wordLength - current.length;
+    var ready = missing === 0 && state.status === "InProgress";
+    check.classList.toggle("is-ready", ready);
+    check.classList.toggle("is-waiting", !ready);
+    check.textContent = CHECK_LABEL;
+    if (!ready && state.status === "InProgress") {
+      var count = document.createElement("span");
+      count.className = "count";
+      count.textContent = "· " + missing + (missing === 1 ? " letter left" : " letters left");
+      check.appendChild(document.createTextNode(" "));
+      check.appendChild(count);
+    }
+    check.setAttribute("aria-label", ready ? CHECK_LABEL : CHECK_LABEL + ", " + missing + " letters left");
   }
 
   function renderResult() {
