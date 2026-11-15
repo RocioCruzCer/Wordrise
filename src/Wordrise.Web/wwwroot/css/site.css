@@ -361,6 +361,20 @@ img, svg { vertical-align: middle; }
 }
 .board-row.current .tile { border-color: color-mix(in srgb, var(--amber) 45%, var(--border)); }
 .tile.filled { border-color: var(--text); animation: pop .14s ease-out; box-shadow: 0 3px 0 var(--border); }
+/* Current row: any square can be selected to type there. */
+.tile.slot { cursor: pointer; }
+.tile.slot:hover:not(.cursor) { border-color: var(--amber); }
+.tile.cursor {
+  border-color: var(--amber); background: color-mix(in srgb, var(--amber-soft) 60%, var(--surface));
+  box-shadow: 0 0 0 3px rgba(245, 165, 36, .3), 0 3px 0 var(--amber-deep); transform: translateY(-2px);
+  transition: transform .12s, box-shadow .12s;
+}
+.tile.cursor::before {
+  content: ""; position: absolute; left: 25%; right: 25%; bottom: 14%; height: 3px; border-radius: 2px;
+  background: var(--amber-deep); animation: caret 1s steps(1) infinite;
+}
+.tile.cursor.filled::before { left: 30%; right: 30%; bottom: 8%; }
+@keyframes caret { 50% { opacity: 0; } }
 .tile.correct { background: var(--amber); border-color: var(--amber); color: var(--night); box-shadow: 0 3px 0 var(--amber-deep); }
 .tile.present { background: var(--amber-soft); border: 2px dashed var(--amber-deep); box-shadow: 0 3px 0 #ecc98a; }
 :root[data-theme="dark"] .tile.present { border-color: var(--amber); box-shadow: 0 3px 0 #2e2410; }
@@ -413,14 +427,63 @@ img, svg { vertical-align: middle; }
 .hints .btn + .btn { margin-top: .6rem; }
 .side-panel { display: grid; gap: 1rem; }
 
-.result { border: 2px solid var(--amber); box-shadow: var(--shadow-lg); animation: rise-in .5s cubic-bezier(.2, .8, .2, 1) both; }
 .result-word { font-size: 2.3rem; text-transform: lowercase; margin: 0; }
+.result-summary { border: 2px solid var(--amber); display: grid; gap: .3rem; }
+.result-summary .result-word { font-size: 1.8rem; margin-bottom: .5rem; }
 .result-details { display: grid; grid-template-columns: auto 1fr; gap: .45rem .9rem; margin: .8rem 0 1.1rem; }
 .result-details dt { font-weight: 800; color: var(--muted); font-size: .85rem; padding-top: .1rem; }
 .result-details dd { margin: 0; }
 .tip { background: var(--surface-2); box-shadow: none; }
 /* A finished round shows its result before the hints. */
-.round.is-finished .result { order: -1; }
+.round.is-finished .result-summary { order: -1; }
+
+/* ---------- Result modal ---------- */
+.modal {
+  width: min(460px, calc(100% - 1.5rem)); max-height: calc(100dvh - 2rem); padding: 0; border: 0; border-radius: 26px;
+  background: var(--surface); color: var(--text); box-shadow: 0 30px 80px rgba(8, 14, 30, .45); overflow: auto;
+}
+.modal[open] .modal-body { animation: modal-in .45s cubic-bezier(.2, .9, .25, 1.15) both; }
+.modal::backdrop { background: rgba(8, 14, 30, .55); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px); }
+.modal[open]::backdrop { animation: fade-in .3s ease-out; }
+body.modal-open { overflow: hidden; }
+.modal-hero {
+  position: relative; overflow: hidden; isolation: isolate; padding: 1.6rem 1.4rem 2.4rem; color: var(--warm-white); text-align: center;
+  background:
+    radial-gradient(110% 90% at 50% 120%, rgba(245,165,36,.9), rgba(242,107,91,.45) 40%, transparent 70%),
+    linear-gradient(180deg, #101a33, var(--night-2));
+}
+.modal-hero::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 26px; z-index: -1; background: var(--surface);
+  clip-path: polygon(0 100%, 0 60%, 18% 20%, 34% 70%, 52% 0, 70% 60%, 86% 25%, 100% 65%, 100% 100%);
+}
+.modal.lost .modal-hero { background: linear-gradient(180deg, #1a2440, #2a3658); }
+.modal-hero .eyebrow { color: #ffcf73; margin-bottom: .2rem; }
+.modal.lost .modal-hero .eyebrow { color: #c9d1e4; text-transform: none; letter-spacing: 0; font-size: .9rem; font-weight: 700; }
+.modal-word { justify-content: center; gap: .7rem; }
+.modal-word .result-word { font-size: 2.6rem; color: var(--warm-white); }
+.modal-word .icon-btn { background: rgba(255, 248, 238, .12); border-color: rgba(255, 248, 238, .35); color: var(--warm-white); box-shadow: none; }
+.modal-score {
+  display: inline-block; margin: .5rem 0 0; padding: .3rem .9rem; border-radius: 999px;
+  background: var(--amber); color: var(--night); font-weight: 900; font-size: .9rem;
+}
+.modal.lost .modal-score { background: rgba(255, 248, 238, .15); color: var(--warm-white); }
+.modal-close {
+  position: absolute; top: .7rem; right: .7rem; width: 2.4rem; height: 2.4rem; border-radius: 50%; border: 0;
+  background: rgba(255, 248, 238, .14); color: var(--warm-white); font-size: 1.5rem; line-height: 1; cursor: pointer;
+}
+.modal-close:hover { background: rgba(255, 248, 238, .25); }
+.modal-body:focus { outline: none; }
+.modal-content { padding: .4rem 1.4rem 1.4rem; }
+.modal-content .chips { justify-content: center; }
+.modal .achievement-host { position: fixed; }
+@keyframes modal-in { from { opacity: 0; transform: translateY(28px) scale(.94); } to { opacity: 1; transform: none; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@media (max-width: 520px) {
+  .modal { width: 100%; max-width: none; margin: auto 0 0; border-radius: 26px 26px 0 0; max-height: 92dvh; }
+  .modal[open] .modal-body { animation-name: sheet-in; }
+  .modal-content { padding-bottom: calc(1.4rem + env(safe-area-inset-bottom)); }
+}
+@keyframes sheet-in { from { transform: translateY(100%); } to { transform: none; } }
 
 /* Mobile focus mode for game screens: no tab bar, keyboard docked at the bottom. */
 @media (max-width: 899px) {

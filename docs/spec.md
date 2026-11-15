@@ -49,6 +49,12 @@ Reglas comunes de entrenamiento:
 - Una sola ronda en curso por modo: "Play" reanuda la existente.
 - "Skip this word" termina la ronda como fallida, revela la palabra y la manda a repaso. No existe en el reto diario ni en repaso.
 - "Next word" (o Enter al terminar) inicia otra ronda con el mismo nivel/origen.
+
+### Interacción del tablero (solicitado por el usuario)
+
+- El botón para enviar el intento dice "Check answer" y está debajo del teclado; muestra cuántas letras faltan.
+- Se puede elegir en qué casilla escribir: tocar/clic en una casilla de la fila actual la selecciona; las flechas ← → también mueven la selección. Al escribir, la letra va a la casilla seleccionada y la selección salta a la siguiente casilla vacía. Borrar limpia la casilla seleccionada (o la anterior si está vacía). Con la fila llena, para cambiar una letra se toca su casilla.
+- Al terminar la ronda (ganada o perdida) el resultado aparece en un modal (`<dialog>`); en móvil se muestra como hoja inferior. Se cierra con ×, Escape o clic fuera, y se reabre con "See result". Al volver a abrir una ronda terminada, el modal aparece automáticamente.
 - Banco ampliado a 36 palabras por nivel (108). Las de 6 letras pueden ser palabra del día; el resto (4–10 letras) solo entrenamiento.
 
 Decisión y riesgo (desafío de escucha): la síntesis de voz ocurre en el navegador, así que el cliente recibe la palabra (`spokenWord`) desde el inicio. Por eso esas rondas no cuentan para palabras aprendidas, precisión ni promedio. Los demás modos mantienen la regla de no enviar la respuesta antes de terminar.

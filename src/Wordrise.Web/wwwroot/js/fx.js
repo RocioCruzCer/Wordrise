@@ -52,12 +52,17 @@ window.WordriseFx = (function () {
     try { SOUNDS[name](); } catch (e) { /* audio blocked until a user gesture: ignore */ }
   }
 
+  // An open modal <dialog> lives in the top layer and would cover anything appended to <body>.
+  function layer() {
+    return document.querySelector("dialog[open]") || document.body;
+  }
+
   function confetti(amount) {
     if (reducedMotion) { return; }
     var canvas = document.createElement("canvas");
     canvas.className = "confetti";
     canvas.setAttribute("aria-hidden", "true");
-    document.body.appendChild(canvas);
+    layer().appendChild(canvas);
     var g = canvas.getContext("2d");
     var w = canvas.width = window.innerWidth;
     var h = canvas.height = window.innerHeight;
@@ -96,8 +101,8 @@ window.WordriseFx = (function () {
       host.className = "achievement-host";
       host.setAttribute("role", "status");
       host.setAttribute("aria-live", "polite");
-      document.body.appendChild(host);
     }
+    if (host.parentNode !== layer()) { layer().appendChild(host); }
     var card = document.createElement("div");
     card.className = "achievement-toast";
     var icon = document.createElement("span");

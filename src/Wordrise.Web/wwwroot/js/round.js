@@ -22,7 +22,8 @@
   var fx = window.WordriseFx || { sound: function () {}, confetti: function () {}, fetchProgress: function () { return Promise.resolve(null); } };
   var messageEl = document.getElementById("message");
   var attemptBadge = document.getElementById("attempt-badge");
-  var resultEl = document.getElementById("result");
+  var resultEl = document.getElementById("result");          // <dialog>
+  var summaryEl = document.getElementById("result-summary");
   var giveUpBtn = document.getElementById("give-up");
   var listenPanel = document.getElementById("listen-panel");
 
@@ -33,7 +34,10 @@
   var ROWS = [["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"], ["a", "s", "d", "f", "g", "h", "j", "k", "l"], ["z", "x", "c", "v", "b", "n", "m", "del"]];
   var CHECK_LABEL = "Check answer";
 
-  var current = "";
+  // Letters of the guess being typed, one slot per position, so the player can fill them in any order.
+  var slots = [];
+  var cursor = 0;            // selected position in the current row; -1 when every slot is filled
+  var resultShown = false;   // the modal opens once per page load (or when the round ends)
   var busy = false;
   var justFinished = false;
   var revealRow = -1; // row that animates after a successful guess
@@ -89,10 +93,15 @@
           if (r === revealRow) { tile.classList.add("reveal"); }
           tile.setAttribute("aria-label", letter.toUpperCase() + ", " + STATE_LABEL[s]);
           rowLabel.push(letter.toUpperCase() + " " + STATE_LABEL[s]);
-        } else if (isCurrent && current[c]) {
-          letter = current[c];
-          tile.classList.add("filled");
-          tile.setAttribute("aria-label", letter.toUpperCase());
+        } else if (isCurrent) {
+          letter = slots[c] || "";
+          if (letter) { tile.classList.add("filled"); }
+          tile.classList.add("slot");
+          tile.dataset.index = c;
+          var selected = c === cursor;
+          if (selected) { tile.classList.add("cursor"); }
+          tile.setAttribute("aria-label", "Position " + (c + 1) + " of " + state.wordLength + ", " +
+            (letter ? letter.toUpperCase() : "empty") + (selected ? ", selected" : ""));
         } else {
           tile.setAttribute("aria-label", "empty");
         }
@@ -186,7 +195,7 @@
   function updateCheckButton() {
     var check = document.getElementById("check-answer");
     if (!check) { return; }
-    var missing = state.wordLength - current.length;
+    var missing = state.wordLength - filledCount();
     var ready = missing === 0 && state.status === "InProgress";
     check.classList.toggle("is-ready", ready);
     check.classList.toggle("is-waiting", !ready);
@@ -202,18 +211,23 @@
   }
 
   function renderResult() {
-    if (!state.result) { resultEl.hidden = true; return; }
+    if (!state.result) { summaryEl.hidden = true; return; }
     var r = state.result;
-    resultEl.hidden = false;
-    document.getElementById("result-kicker").textContent = r.won
+    var kicker = r.won
       ? CHEERS[state.attemptsUsed % CHEERS.length]
       : "Out of attempts. This word will come back for review.";
+    resultEl.classList.toggle("lost", !r.won);
+    document.getElementById("result-kicker").textContent = kicker;
     document.getElementById("result-title").textContent = r.word;
+    document.getElementById("summary-kicker").textContent = kicker;
+    document.getElementById("summary-title").textContent = r.word;
+    summaryEl.hidden = false;
     document.getElementById("result-pos").textContent = r.partOfSpeech + " · " + r.level;
     document.getElementById("result-definition").textContent = r.definition;
     document.getElementById("result-example").textContent = r.example;
     document.getElementById("result-translation").textContent = r.translation;
-    document.getElementById("result-score").textContent = r.score + " pts";
+    document.getElementById("result-score").textContent = r.score + " pts" +
+      (r.won ? " · solved in " + state.attemptsUsed + "/" + state.maxAttempts : "");
 
     var speakBtn = document.getElementById("speak");
     var unavailable = document.getElementById("speech-unavailable");
@@ -229,15 +243,44 @@
     setupShare();
     startCountdown();
 
-    if (justFinished) {
-      fx.sound(r.won ? "win" : "lose");
-      if (r.won) { celebrate(); fx.confetti(); }
-      loadProgress();
-      if (autoAudio) { window.WordriseSpeech.speak(r.word); }
-      resultEl.focus();
+    if (justFinished || !resultShown) {
+      // Wait for the last row to flip before covering the board.
+      var delay = justFinished ? state.wordLength * 70 + 550 : 0;
+      var finishedNow = justFinished;
       justFinished = false;
+      resultShown = true;
+      setTimeout(function () {
+        openResult();
+        if (!finishedNow) { return; }
+        fx.sound(r.won ? "win" : "lose");
+        if (r.won) { celebrate(); fx.confetti(); }
+        loadProgress();
+        if (autoAudio) { window.WordriseSpeech.speak(r.word); }
+      }, delay);
     }
   }
+
+  // ---------- Result modal ----------
+
+  function openResult() {
+    if (resultEl.open) { return; }
+    if (typeof resultEl.showModal === "function") { resultEl.showModal(); }
+    else { resultEl.setAttribute("open", ""); }   // very old browsers: shown inline, no backdrop
+    document.body.classList.add("modal-open");
+  }
+
+  function closeResult() {
+    if (typeof resultEl.close === "function") { resultEl.close(); } else { resultEl.removeAttribute("open"); }
+  }
+
+  resultEl.addEventListener("close", function () {
+    document.body.classList.remove("modal-open");
+    document.getElementById("open-result").focus();
+  });
+  // Click on the backdrop (outside the panel) closes the modal.
+  resultEl.addEventListener("click", function (e) { if (e.target === resultEl) { closeResult(); } });
+  document.getElementById("close-result").addEventListener("click", closeResult);
+  document.getElementById("open-result").addEventListener("click", openResult);
 
   // Goal ring, XP, combo and achievements after the round ends.
   function loadProgress() {
@@ -330,13 +373,62 @@
 
   // ---------- Input ----------
 
+  function resetSlots() {
+    slots = [];
+    for (var i = 0; i < state.wordLength; i++) { slots.push(""); }
+    cursor = 0;
+  }
+
+  function filledCount() {
+    return slots.filter(function (l) { return !!l; }).length;
+  }
+
+  // First empty slot at or after `from`, wrapping to the start; -1 when the row is full.
+  function nextEmpty(from) {
+    for (var i = 0; i < slots.length; i++) {
+      var idx = (from + i) % slots.length;
+      if (!slots[idx]) { return idx; }
+    }
+    return -1;
+  }
+
+  function lastFilled() {
+    for (var i = slots.length - 1; i >= 0; i--) { if (slots[i]) { return i; } }
+    return -1;
+  }
+
+  function moveCursor(step) {
+    var base = cursor === -1 ? (step > 0 ? -1 : slots.length) : cursor;
+    cursor = Math.min(slots.length - 1, Math.max(0, base + step));
+    renderBoard();
+  }
+
+  function selectSlot(index) {
+    if (busy || state.status !== "InProgress") { return; }
+    cursor = index;
+    renderBoard();
+  }
+
   function press(key) {
     if (busy || state.status !== "InProgress") { return; }
     if (key === "enter") { submit(); return; }
-    if (key === "del" || key === "backspace") { current = current.slice(0, -1); renderBoard(); return; }
-    if (/^[a-z]$/.test(key) && current.length < state.wordLength) {
+    if (key === "del" || key === "backspace") {
+      if (cursor !== -1 && slots[cursor]) {
+        slots[cursor] = "";                       // clear the selected letter, stay there
+      } else {
+        var prev = cursor === -1 ? lastFilled() : cursor - 1;
+        if (prev < 0) { return; }
+        slots[prev] = "";
+        cursor = prev;
+      }
+      renderBoard();
+      return;
+    }
+    if (/^[a-z]$/.test(key)) {
+      if (cursor === -1) { return; }              // row full: tap a square to replace a letter
       fx.sound("key");
-      current += key;
+      slots[cursor] = key;
+      cursor = nextEmpty(cursor + 1);
       showMessage("");
       renderBoard();
     }
@@ -345,6 +437,12 @@
   keyboardEl.addEventListener("click", function (e) {
     var btn = e.target.closest("button[data-key]");
     if (btn) { press(btn.dataset.key); }
+  });
+
+  // Tap a square of the current row to choose where the next letter goes.
+  board.addEventListener("click", function (e) {
+    var tile = e.target.closest(".tile.slot");
+    if (tile) { selectSlot(Number(tile.dataset.index)); }
   });
 
   document.addEventListener("keydown", function (e) {
@@ -359,7 +457,9 @@
       var nextBtn = document.getElementById("next-word");
       if (state.status !== "InProgress" && nextBtn) { nextBtn.click(); return; }
       press("enter");
-    } else if (k === "backspace") { e.preventDefault(); press("del"); }
+    } else if (k === "backspace" || k === "delete") { e.preventDefault(); press("del"); }
+    else if (k === "arrowleft") { e.preventDefault(); if (state.status === "InProgress") { moveCursor(-1); } }
+    else if (k === "arrowright") { e.preventDefault(); if (state.status === "InProgress") { moveCursor(1); } }
     else if (/^[a-z]$/.test(k)) { press(k); }
   });
 
@@ -404,9 +504,8 @@
       if (!window.confirm("Skip this word? It will be revealed and added to your review list.")) { return; }
       call("/api/rounds/" + roundId + "/give-up", null).then(function (ok) {
         if (!ok) { return; }
-        current = "";
+        resetSlots();
         showMessage("Word revealed. It will come back in your review list.");
-        resultEl.focus();
       });
     });
   }
@@ -415,14 +514,16 @@
 
   function submit() {
     // Client-side checks mirror the server (length and letters); the server re-validates everything.
-    if (current.length !== state.wordLength) {
-      showMessage("Type " + state.wordLength + " letters.", true);
+    if (filledCount() !== state.wordLength) {
+      var missing = state.wordLength - filledCount();
+      showMessage("Fill " + missing + " more " + (missing === 1 ? "square" : "squares") + ".", true);
+      if (cursor === -1 || slots[cursor]) { cursor = nextEmpty(0); renderBoard(); }
       return;
     }
     var before = state.status;
-    call("/api/rounds/" + roundId + "/guesses", { guess: current }).then(function (ok) {
+    call("/api/rounds/" + roundId + "/guesses", { guess: slots.join("") }).then(function (ok) {
       if (!ok) { return; }
-      current = "";
+      resetSlots();
       revealRow = state.attempts.length - 1;
       playRowSounds(state.attempts[revealRow]);
       if (before === "InProgress" && state.status !== "InProgress") {
@@ -484,9 +585,10 @@
   function reload() {
     return fetch("/api/rounds/" + roundId, { credentials: "same-origin", headers: { "Accept": "application/json" } })
       .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (data) { if (data) { state = data; current = ""; render(); } })
+      .then(function (data) { if (data) { state = data; resetSlots(); render(); } })
       .catch(function () { /* keep current state; message already shown */ });
   }
 
+  resetSlots();
   render();
 })();
