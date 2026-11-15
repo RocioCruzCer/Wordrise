@@ -1,0 +1,93 @@
+@model AccountPageModel
+@{
+    ViewData["Title"] = Model.ActiveTab == "signup" ? "Sign up" : "Log in";
+    var isSignUp = Model.ActiveTab == "signup";
+}
+<div class="auth">
+    <section class="auth-hero">
+        <div class="brand big"><img src="~/img/logo.svg" alt="" width="40" height="40" /> <span>Wordrise</span></div>
+        <p class="tagline">One word a day. Rise every day.</p>
+        <ul class="perks">
+            <li>@await Html.PartialAsync("_Icon", "check") Hints that teach, not just reveal</li>
+            <li>@await Html.PartialAsync("_Icon", "check") Hear every word with its pronunciation</li>
+            <li>@await Html.PartialAsync("_Icon", "check") Review what you miss, right on time</li>
+        </ul>
+        <button type="button" class="btn btn-outline btn-sm install-btn" data-install hidden>Install the app</button>
+    </section>
+
+    <section class="auth-card card">
+        <h1 class="sr-only">@ViewData["Title"]</h1>
+        <p class="auth-welcome">@(isSignUp ? "Create your account" : "Welcome back")</p>
+
+        <nav class="tabs" aria-label="Account">
+            <a asp-action="Login" asp-route-tab="login" aria-current="@(isSignUp ? "false" : "page")">Log in</a>
+            <a asp-action="Login" asp-route-tab="signup" aria-current="@(isSignUp ? "page" : "false")">Sign up</a>
+        </nav>
+
+        @if (!isSignUp)
+        {
+            <form asp-action="Login" method="post" novalidate>
+                <input type="hidden" asp-for="Login.ReturnUrl" />
+                <div class="field">
+                    <label asp-for="Login.Email">Email</label>
+                    <input asp-for="Login.Email" type="email" autocomplete="email" placeholder="you@example.com" required />
+                    <span asp-validation-for="Login.Email" class="field-error"></span>
+                </div>
+                <div class="field">
+                    <label asp-for="Login.Password">Password</label>
+                    <div class="password">
+                        <input asp-for="Login.Password" autocomplete="current-password" required />
+                        <button type="button" class="link-btn" data-toggle-password>Show</button>
+                    </div>
+                    <span asp-validation-for="Login.Password" class="field-error"></span>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Log in</button>
+            </form>
+            <p class="muted center">New here? <a asp-action="Login" asp-route-tab="signup">Create an account</a></p>
+        }
+        else
+        {
+            <form asp-action="SignUp" method="post" novalidate>
+                <div class="field">
+                    <label asp-for="SignUp.Name">Name</label>
+                    <input asp-for="SignUp.Name" autocomplete="given-name" maxlength="60" required />
+                    <span asp-validation-for="SignUp.Name" class="field-error"></span>
+                </div>
+                <div class="field">
+                    <label asp-for="SignUp.Email">Email</label>
+                    <input asp-for="SignUp.Email" type="email" autocomplete="email" placeholder="you@example.com" required />
+                    <span asp-validation-for="SignUp.Email" class="field-error"></span>
+                </div>
+                <div class="field">
+                    <label asp-for="SignUp.Password">Password</label>
+                    <div class="password">
+                        <input asp-for="SignUp.Password" autocomplete="new-password" minlength="8" required aria-describedby="pwd-help" />
+                        <button type="button" class="link-btn" data-toggle-password>Show</button>
+                    </div>
+                    <small id="pwd-help" class="muted">At least 8 characters.</small>
+                    <span asp-validation-for="SignUp.Password" class="field-error"></span>
+                </div>
+                <fieldset class="field">
+                    <legend>Your English level (CEFR)</legend>
+                    <div class="segmented">
+                        @foreach (var lvl in Enum.GetValues<CefrLevel>())
+                        {
+                            <label>
+                                <input type="radio" name="SignUp.Level" value="@lvl" checked="@(Model.SignUp.Level == lvl)" />
+                                <span>@lvl</span>
+                            </label>
+                        }
+                    </div>
+                    <small class="muted">You can change it later in Profile.</small>
+                    <span asp-validation-for="SignUp.Level" class="field-error"></span>
+                </fieldset>
+                <button type="submit" class="btn btn-primary btn-block">Create account</button>
+            </form>
+            <p class="muted center">Already have an account? <a asp-action="Login" asp-route-tab="login">Log in</a></p>
+        }
+    </section>
+</div>
+
+@section Scripts {
+    <script src="~/js/account.js" asp-append-version="true"></script>
+}

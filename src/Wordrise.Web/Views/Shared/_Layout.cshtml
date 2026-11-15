@@ -1,0 +1,77 @@
+@{
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+    var name = User.Identity?.Name ?? string.Empty;
+    var level = User.FindFirst(ClaimsPrincipalExtensions.LevelClaim)?.Value ?? string.Empty;
+    var initial = string.IsNullOrEmpty(name) ? "?" : name[..1].ToUpperInvariant();
+    var section = ViewData["Section"] as string ?? string.Empty;
+    string Current(string s) => s == section ? "page" : "false";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="description" content="One word a day. Rise every day. Guess an English word with progressive hints." />
+    <meta name="theme-color" content="#14213D" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Wordrise" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="~/icons/apple-touch-icon.png" />
+    <title>@(ViewData["Title"] is string t ? $"{t} · Wordrise" : "Wordrise")</title>
+    <link rel="icon" href="~/img/logo.svg" type="image/svg+xml" />
+    <link rel="icon" href="~/icons/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <script src="~/js/theme.js" asp-append-version="true"></script>
+    <script src="~/js/pwa.js" asp-append-version="true" defer></script>
+</head>
+<body class="@(isAuthenticated ? "app" : "public")">
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    @if (isAuthenticated)
+    {
+        <aside class="sidebar" aria-label="Main navigation">
+            <a class="brand" asp-controller="Home" asp-action="Index">
+                <img src="~/img/logo.svg" alt="" width="28" height="28" /> <span>Wordrise</span>
+            </a>
+            <nav class="side-nav">
+                <a asp-controller="Home" asp-action="Index" aria-current="@Current("home")">@await Html.PartialAsync("_Icon", "home") Home</a>
+                <a asp-controller="Play" asp-action="Index" aria-current="@Current("play")">@await Html.PartialAsync("_Icon", "play") Play</a>
+                <a asp-controller="League" asp-action="Index" aria-current="@Current("league")">@await Html.PartialAsync("_Icon", "trophy") League</a>
+                <a asp-controller="Progress" asp-action="Index" aria-current="@Current("progress")">@await Html.PartialAsync("_Icon", "progress") Progress</a>
+                <a asp-controller="Profile" asp-action="Index" aria-current="@Current("profile")">@await Html.PartialAsync("_Icon", "profile") Profile</a>
+            </nav>
+            <button type="button" class="btn btn-outline btn-sm install-btn" data-install hidden>Install app</button>
+            <div class="user-chip">
+                <span class="avatar" aria-hidden="true">@initial</span>
+                <span><strong>@name</strong><small>Level @level</small></span>
+            </div>
+        </aside>
+    }
+
+    <main id="main" class="main" tabindex="-1">
+        @if (TempData["Flash"] is string flash)
+        {
+            <p class="flash" role="status">@flash</p>
+        }
+        @RenderBody()
+    </main>
+
+    @if (isAuthenticated)
+    {
+        <nav class="bottom-nav" aria-label="Main navigation">
+            <a asp-controller="Home" asp-action="Index" aria-current="@Current("home")">@await Html.PartialAsync("_Icon", "home")<span>Home</span></a>
+            <a asp-controller="Play" asp-action="Index" aria-current="@Current("play")">@await Html.PartialAsync("_Icon", "play")<span>Play</span></a>
+            <a asp-controller="League" asp-action="Index" aria-current="@Current("league")">@await Html.PartialAsync("_Icon", "trophy")<span>League</span></a>
+            <a asp-controller="Progress" asp-action="Index" aria-current="@Current("progress")">@await Html.PartialAsync("_Icon", "progress")<span>Progress</span></a>
+            <a asp-controller="Profile" asp-action="Index" aria-current="@Current("profile")">@await Html.PartialAsync("_Icon", "profile")<span>Profile</span></a>
+        </nav>
+    }
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

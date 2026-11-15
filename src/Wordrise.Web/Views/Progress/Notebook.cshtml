@@ -1,0 +1,49 @@
+@model NotebookPageModel
+@{
+    ViewData["Title"] = "Notebook of peaks";
+    ViewData["Section"] = "progress";
+}
+<header class="page-head row">
+    <a class="icon-btn" asp-action="Index" aria-label="Back to Progress">&larr;</a>
+    <h1>Notebook of peaks</h1>
+</header>
+
+@if (Model.Items.Count == 0)
+{
+    <p class="muted">Words you guess will be saved here.</p>
+}
+else
+{
+    <ul class="notebook notebook-full">
+        @foreach (var item in Model.Items)
+        {
+            <li class="card">
+                <div class="row between">
+                    <div><strong>@item.Text</strong> <span class="badge">@item.Level</span></div>
+                    <button type="button" class="icon-btn" data-speak="@item.Text" aria-label="Listen to @item.Text">
+                        @await Html.PartialAsync("_Icon", "speaker")
+                    </button>
+                </div>
+                <p>@item.Definition</p>
+                <p class="muted"><em>@item.Example</em></p>
+                <p class="small">ES: @item.Translation</p>
+            </li>
+        }
+    </ul>
+}
+
+<nav class="pager" aria-label="Pages">
+    @if (Model.Page > 1)
+    {
+        <a asp-action="Notebook" asp-route-page="@(Model.Page - 1)">&larr; Previous</a>
+    }
+    @if (Model.HasNext)
+    {
+        <a asp-action="Notebook" asp-route-page="@(Model.Page + 1)">Next &rarr;</a>
+    }
+</nav>
+
+@section Scripts {
+    <script src="~/js/speech.js" asp-append-version="true"></script>
+    <script src="~/js/notebook.js" asp-append-version="true"></script>
+}

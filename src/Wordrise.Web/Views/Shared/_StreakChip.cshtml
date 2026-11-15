@@ -1,0 +1,9 @@
+@model UserStats
+@{
+    var days = Model.CurrentStreak == 1 ? "day" : "days";
+}
+<span class="streak" title="Best streak: @Model.BestStreak">
+    <span class="flame" aria-hidden="true">▲</span>
+    <span>@Model.CurrentStreak-@days streak</span>
+    <span class="sr-only">. Best streak: @Model.BestStreak days.</span>
+</span>

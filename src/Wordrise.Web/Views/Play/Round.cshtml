@@ -1,0 +1,130 @@
+@model RoundPageModel
+@{
+    ViewData["Title"] = Model.Round.Mode switch
+    {
+        RoundMode.Daily => "Today's word",
+        RoundMode.Review => "Review",
+        RoundMode.Listening => "Listening challenge",
+        _ => "Practice"
+    };
+    ViewData["Section"] = "play";
+    var isTraining = Model.Round.Mode is RoundMode.Practice or RoundMode.Listening;
+    var next = Model.Next;
+}
+<div class="round" data-round-id="@Model.Round.RoundId" data-audio="@(Model.AudioEnabled ? "on" : "off")"
+     data-next-word-seconds="@Model.SecondsToNextWord" data-sound="@(Model.SoundEnabled ? "on" : "off")">
+    @Html.AntiForgeryToken()
+    <script id="round-state" type="application/json">@Json.Serialize(Model.Round)</script>
+
+    <header class="page-head row between">
+        <div class="row">
+            <a class="icon-btn" asp-controller="Play" asp-action="Index" aria-label="Back to Play">&larr;</a>
+            <h1>@ViewData["Title"]</h1>
+            @if (isTraining)
+            {
+                <span class="badge">@Model.Round.Level</span>
+            }
+        </div>
+        <span class="badge" id="attempt-badge" aria-live="polite"></span>
+    </header>
+
+    <noscript><p class="flash">Wordrise needs JavaScript enabled to play.</p></noscript>
+
+    <div class="round-layout">
+        <section class="board-area" aria-label="Game board">
+            @if (Model.Round.Mode == RoundMode.Listening)
+            {
+                <div class="listen-panel" id="listen-panel">
+                    <button type="button" id="listen" class="btn btn-accent">
+                        @await Html.PartialAsync("_Icon", "speaker") Listen to the word
+                    </button>
+                    <button type="button" id="listen-slow" class="btn btn-outline btn-sm">Slower</button>
+                    <p class="small muted">Listen as many times as you need, then type what you hear.</p>
+                </div>
+            }
+            <div id="board" class="board" role="grid" aria-label="Attempts grid"></div>
+
+            <ul class="legend" aria-label="Legend">
+                <li><span class="tile tile-sm correct" aria-hidden="true">✓</span> Right spot</li>
+                <li><span class="tile tile-sm present" aria-hidden="true">•</span> In the word</li>
+                <li><span class="tile tile-sm absent" aria-hidden="true">×</span> Not in word</li>
+            </ul>
+
+            <p id="message" class="message" role="status" aria-live="assertive"></p>
+
+            <div id="keyboard" class="keyboard" aria-label="On-screen keyboard"></div>
+        </section>
+
+        <aside class="side-panel">
+            <section class="card hints" aria-labelledby="hints-title">
+                <div class="row between">
+                    <h2 id="hints-title">Hints</h2>
+                    <span class="muted small" id="hints-count"></span>
+                </div>
+                <ol id="hints" class="hint-list"></ol>
+                <div id="emoji-box" class="emoji-hint" hidden aria-label="Picture hint"></div>
+                <button type="button" id="use-hint" class="btn btn-outline btn-block">Use a hint (-10 pts)</button>
+                <button type="button" id="emoji-hint" class="btn btn-outline btn-block" hidden>Picture hint (-10 pts)</button>
+                @if (isTraining)
+                {
+                    <button type="button" id="give-up" class="link-btn give-up">Skip this word</button>
+                }
+            </section>
+
+            <section id="result" class="card result" hidden aria-labelledby="result-title" tabindex="-1">
+                <p class="eyebrow" id="result-kicker"></p>
+                <div class="row between">
+                    <h2 id="result-title" class="result-word"></h2>
+                    <button type="button" id="speak" class="icon-btn" aria-label="Listen to the pronunciation">
+                        @await Html.PartialAsync("_Icon", "speaker")
+                    </button>
+                </div>
+                <p id="speech-unavailable" class="muted small" hidden>Audio is not available in this browser.</p>
+                <div id="result-progress" class="chips" hidden aria-live="polite"></div>
+                <dl class="result-details">
+                    <dt>Part of speech</dt><dd id="result-pos"></dd>
+                    <dt>Definition</dt><dd id="result-definition"></dd>
+                    <dt>Example</dt><dd id="result-example"></dd>
+                    <dt>Spanish</dt><dd id="result-translation"></dd>
+                    <dt>Score</dt><dd id="result-score"></dd>
+                </dl>
+                <div class="result-actions">
+                    @if (Model.Round.Mode == RoundMode.Daily)
+                    {
+                        <button type="button" id="share" class="btn btn-accent btn-block">Share result</button>
+                        <p class="countdown" id="countdown" aria-live="off">Next word in <strong id="countdown-time">--:--:--</strong></p>
+                    }
+                    @if (isTraining && next is not null)
+                    {
+                        <form method="post" asp-controller="Play"
+                              asp-action="@(next.Mode == RoundMode.Listening ? "Listening" : "Practice")">
+                            <input type="hidden" name="level" value="@next.Token" />
+                            <button type="submit" class="btn btn-accent btn-block" id="next-word">Next word</button>
+                        </form>
+                        <a class="btn btn-outline btn-block" asp-controller="Play" asp-action="Index">Back to Play</a>
+                    }
+                    else if (Model.Round.Mode == RoundMode.Daily)
+                    {
+                        <a class="btn btn-outline btn-block" asp-controller="Play" asp-action="Index">Keep training</a>
+                        <a class="btn btn-primary btn-block" asp-controller="Home" asp-action="Index">Back to Home</a>
+                    }
+                    else
+                    {
+                        <a class="btn btn-primary btn-block" asp-controller="Play" asp-action="Index">Back to Play</a>
+                    }
+                </div>
+            </section>
+
+            <section class="card tip">
+                <h2 class="small">Tip</h2>
+                <p class="muted small">Use the definition to narrow down the word before spending a guess.</p>
+            </section>
+        </aside>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/speech.js" asp-append-version="true"></script>
+    <script src="~/js/fx.js" asp-append-version="true"></script>
+    <script src="~/js/round.js" asp-append-version="true"></script>
+}

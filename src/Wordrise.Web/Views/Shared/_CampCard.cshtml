@@ -1,0 +1,24 @@
+@model (Wordrise.Web.Domain.Game.CampProgress Camp, CefrLevel Level)
+@{
+    var camp = Model.Camp;
+}
+<section class="card camp" aria-labelledby="camp-title">
+    <div class="row between">
+        <h2 id="camp-title">Camp: @camp.Current.Name</h2>
+        <span class="badge">@Model.Level</span>
+    </div>
+    @if (camp.Next is not null)
+    {
+        <p class="muted">@camp.WordsLearned of @camp.Next.MinWordsLearned words learned</p>
+        <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="@camp.PercentToNext"
+             aria-label="Progress to @camp.Next.Name">
+            <span style="width:@(camp.PercentToNext)%"></span>
+        </div>
+        <p class="muted small">@camp.WordsToNext more words to reach @camp.Next.Name</p>
+    }
+    else
+    {
+        <p class="muted">@camp.WordsLearned words learned. You reached the top. Nice climb!</p>
+        <div class="progress" aria-hidden="true"><span style="width:100%"></span></div>
+    }
+</section>

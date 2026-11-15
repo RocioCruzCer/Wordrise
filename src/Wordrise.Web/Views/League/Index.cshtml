@@ -1,0 +1,79 @@
+@model LeagueModel
+@{
+    ViewData["Title"] = "League";
+    ViewData["Section"] = "league";
+    var week = Model.Board.Week;
+}
+<header class="page-head row between">
+    <div>
+        <h1>Weekly league</h1>
+        <p class="muted">@week.Start.ToString("MMM d") – @week.End.ToString("MMM d") · resets every Monday</p>
+    </div>
+    <span class="badge">@Model.WeeklyXp XP this week</span>
+</header>
+
+<div class="grid-2">
+    <section class="card" aria-labelledby="level-board-title">
+        <div class="row between">
+            <h2 id="level-board-title">@Model.Board.Title</h2>
+            <nav class="segmented compact" aria-label="League level">
+                @foreach (var lvl in Enum.GetValues<CefrLevel>())
+                {
+                    <a asp-action="Index" asp-route-level="@lvl" aria-current="@(lvl == Model.Level ? "page" : "false")"><span>@lvl</span></a>
+                }
+            </nav>
+        </div>
+        <partial name="_LeagueTable" model="Model.Board" />
+        @if (Model.Board.Me is { Rank: 0 } me)
+        {
+            <p class="small muted">
+                You are not on this board (@me.Xp XP).
+                @if (!Model.User.ShowInLeagues)
+                {
+                    <span>Your name is hidden from level leagues. <a asp-controller="Profile" asp-action="Index">Change in Profile</a>.</span>
+                }
+                else if (Model.Level != Model.User.Level)
+                {
+                    <span>Your league is level @Model.User.Level.</span>
+                }
+            </p>
+        }
+        else if (Model.Board.Me is { } mine && mine.Rank > Model.Board.Top.Count)
+        {
+            <p class="small"><strong>Your rank: #@mine.Rank</strong> of @Model.Board.Participants · @mine.Xp XP</p>
+        }
+    </section>
+
+    <section class="card" aria-labelledby="groups-title">
+        <h2 id="groups-title">My groups</h2>
+        @if (Model.Groups.Count == 0)
+        {
+            <p class="muted">Compete with your class or friends. Create a group and share its code.</p>
+        }
+        else
+        {
+            <ul class="group-list">
+                @foreach (var g in Model.Groups)
+                {
+                    <li>
+                        <a asp-action="Group" asp-route-id="@g.Id"><strong>@g.Name</strong></a>
+                        <small class="muted">@g.Members @(g.Members == 1 ? "member" : "members") · code <code>@g.Code</code></small>
+                    </li>
+                }
+            </ul>
+        }
+
+        <form asp-action="Join" method="post" class="inline-form">
+            <label for="join-code" class="sr-only">Group code</label>
+            <input id="join-code" name="code" maxlength="6" placeholder="Group code" autocapitalize="characters" autocomplete="off" required />
+            <button type="submit" class="btn btn-primary">Join</button>
+        </form>
+        <form asp-action="Create" method="post" class="inline-form">
+            <label for="group-name" class="sr-only">New group name</label>
+            <input id="group-name" name="name" minlength="3" maxlength="40" placeholder="New group name" required />
+            <button type="submit" class="btn btn-outline">Create</button>
+        </form>
+    </section>
+</div>
+
+<p class="small muted">Leagues show first names only. Earn XP by playing any mode; the daily challenge gives a bonus.</p>

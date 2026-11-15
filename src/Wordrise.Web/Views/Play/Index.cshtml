@@ -1,0 +1,128 @@
+@model PlayHubModel
+@{
+    ViewData["Title"] = "Play";
+    ViewData["Section"] = "play";
+    var round = Model.TodayRound;
+    var training = Model.TrainingInProgress;
+    var levels = Enum.GetValues<CefrLevel>();
+}
+<header class="page-head row between">
+    <div>
+        <h1>Play</h1>
+        <p class="muted">One daily challenge, unlimited training</p>
+    </div>
+    @if (Model.TrainingFinishedToday > 0)
+    {
+        <span class="badge">@Model.TrainingFinishedToday training @(Model.TrainingFinishedToday == 1 ? "word" : "words") today</span>
+    }
+</header>
+
+<div class="goal-row">
+    <partial name="_GoalRing" model="Model.Goal" />
+</div>
+
+@if (training is not null)
+{
+    <section class="card continue" aria-labelledby="continue-title">
+        <div>
+            <p class="eyebrow">@(training.Mode == RoundMode.Listening ? "Listening challenge" : "Practice") · Level @training.Level</p>
+            <h2 id="continue-title">You have a word in progress</h2>
+            <p class="muted small">Attempt @(training.AttemptsUsed + 1) of @training.MaxAttempts</p>
+        </div>
+        <a class="btn btn-primary" asp-action="Round" asp-route-id="@training.RoundId">Continue</a>
+    </section>
+}
+
+<div class="grid-hero">
+    <section class="card hero" aria-labelledby="daily-title">
+        <p class="eyebrow">Daily challenge · Level @(round?.Level ?? Model.User.Level)</p>
+        <h2 id="daily-title">Today's word</h2>
+        @if (round is null)
+        {
+            <p class="hero-meta">Same word for everyone at your level. Counts for your streak.</p>
+            <form asp-action="Today" method="post"><button type="submit" class="btn btn-accent">Start</button></form>
+        }
+        else if (round.Status == RoundStatus.InProgress)
+        {
+            <p class="hero-meta">Attempt @(round.AttemptsUsed + 1) of @round.MaxAttempts · @round.HintsUnlocked of @round.TotalHints hints unlocked</p>
+            <a class="btn btn-accent" asp-action="Round" asp-route-id="@round.RoundId">Continue</a>
+        }
+        else
+        {
+            <p class="hero-meta">Done for today · @(round.Result!.Score) pts. Keep training below.</p>
+            <a class="btn btn-ghost-light" asp-action="Round" asp-route-id="@round.RoundId">See result</a>
+        }
+    </section>
+
+    <section class="card" aria-labelledby="review-title">
+        <h2 id="review-title">Review missed words</h2>
+        <p class="muted">@Model.ReviewReady @(Model.ReviewReady == 1 ? "word" : "words") ready, scheduled with spaced repetition.</p>
+        <form asp-action="Review" method="post">
+            <button type="submit" class="btn btn-primary" disabled="@(Model.ReviewReady == 0)">Start review</button>
+        </form>
+    </section>
+</div>
+
+<section aria-labelledby="modes-title">
+    <h2 id="modes-title">Training · unlimited</h2>
+    <ul class="cards-row modes">
+        <li class="card">
+            <h3>Free practice</h3>
+            <p class="muted">A new random word every round. Pick a level and play as many as you want.</p>
+            <form asp-action="Practice" method="post" class="mode-form">
+                <fieldset class="segmented compact">
+                    <legend class="sr-only">Level</legend>
+                    @foreach (var lvl in levels)
+                    {
+                        <label><input type="radio" name="level" value="@lvl" checked="@(lvl == Model.User.Level)" /><span>@lvl</span></label>
+                    }
+                </fieldset>
+                <button type="submit" class="btn btn-accent">Play</button>
+            </form>
+        </li>
+        <li class="card mode-sprint">
+            <h3>Sprint · 60 seconds</h3>
+            <p class="muted">Unscramble as many words as you can before time runs out. Best: <strong>@Model.BestSprint</strong></p>
+            <form asp-action="Sprint" method="post" class="mode-form">
+                <fieldset class="segmented compact">
+                    <legend class="sr-only">Level</legend>
+                    @foreach (var lvl in levels)
+                    {
+                        <label><input type="radio" name="level" value="@lvl" checked="@(lvl == Model.User.Level)" /><span>@lvl</span></label>
+                    }
+                </fieldset>
+                <button type="submit" class="btn btn-accent">Start sprint</button>
+            </form>
+        </li>
+        <li class="card">
+            <h3>Practice past words</h3>
+            <p class="muted">Replay words from your earlier daily challenges.</p>
+            <form asp-action="Practice" method="post" class="mode-form">
+                <input type="hidden" name="level" value="past" />
+                <p class="small muted">@Model.PastDailyWords @(Model.PastDailyWords == 1 ? "word" : "words") available</p>
+                <button type="submit" class="btn btn-primary" disabled="@(Model.PastDailyWords == 0)">Play</button>
+            </form>
+        </li>
+        <li class="card">
+            <h3>Listening challenge</h3>
+            <p class="muted">Hear the word first, then spell it. Great for pronunciation and spelling.</p>
+            <form asp-action="Listening" method="post" class="mode-form" data-requires-speech>
+                <fieldset class="segmented compact">
+                    <legend class="sr-only">Level</legend>
+                    @foreach (var lvl in levels)
+                    {
+                        <label><input type="radio" name="level" value="@lvl" checked="@(lvl == Model.User.Level)" /><span>@lvl</span></label>
+                    }
+                </fieldset>
+                <button type="submit" class="btn btn-primary">Play</button>
+                <p class="small muted" data-speech-unavailable hidden>Your browser cannot play audio, so this mode is not available.</p>
+            </form>
+        </li>
+    </ul>
+    <p class="small muted">Training words never include today's daily words. Missed words go to your review list. Listening rounds do not change your accuracy or learned words, because you hear the answer.</p>
+</section>
+
+@section Scripts {
+    <script src="~/js/speech.js" asp-append-version="true"></script>
+    <script src="~/js/play.js" asp-append-version="true"></script>
+}

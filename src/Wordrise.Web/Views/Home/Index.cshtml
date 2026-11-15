@@ -1,0 +1,103 @@
+@model DashboardModel
+@{
+    ViewData["Title"] = "Home";
+    ViewData["Section"] = "home";
+    var round = Model.TodayRound;
+    var wordLength = round?.WordLength ?? 6;
+}
+<header class="page-head row between">
+    <div>
+        <p class="muted">@Model.Greeting,</p>
+        <h1>@Model.User.Name</h1>
+    </div>
+    <div class="head-badges">
+        <partial name="_StreakChip" model="Model.Stats" />
+        <span class="badge">Level @Model.User.Level</span>
+    </div>
+</header>
+
+<div class="grid-hero">
+    <section class="card hero sky" style="--rise:@((Model.Camp.PercentToNext / 100.0).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture))"
+             aria-labelledby="today-title">
+        <p class="eyebrow">Today's word · Level @(round?.Level ?? Model.User.Level)</p>
+        @if (round is null)
+        {
+            <h2 id="today-title">Guess today's word</h2>
+            <div class="mini-grid" aria-hidden="true">
+                @for (var i = 0; i < wordLength; i++) { <span></span> }
+            </div>
+            <p class="hero-meta">@wordLength letters · @Wordrise.Web.Domain.Game.GameRules.MaxAttempts attempts · up to @Wordrise.Web.Domain.Game.GameRules.TotalHints hints</p>
+            <form asp-controller="Play" asp-action="Today" method="post">
+                <button type="submit" class="btn btn-accent">Play today's word</button>
+            </form>
+        }
+        else if (round.Status == RoundStatus.InProgress)
+        {
+            <h2 id="today-title">Keep climbing</h2>
+            <p class="hero-meta">Attempt @(round.AttemptsUsed + 1) of @round.MaxAttempts · @round.HintsUnlocked of @round.TotalHints hints unlocked</p>
+            <a class="btn btn-accent" asp-controller="Play" asp-action="Round" asp-route-id="@round.RoundId">Continue</a>
+        }
+        else
+        {
+            <h2 id="today-title">@(round.Status == RoundStatus.Won ? "Nice climb!" : "One step higher tomorrow!")</h2>
+            <p class="hero-meta">Today's word was <strong>@(round.Result!.Word)</strong> · @(round.Result.Score) pts</p>
+            <div class="row">
+                <a class="btn btn-accent" asp-controller="Play" asp-action="Index">Keep training</a>
+                <a class="btn btn-ghost-light" asp-controller="Play" asp-action="Round" asp-route-id="@round.RoundId">See result</a>
+            </div>
+        }
+    </section>
+
+    <partial name="_CampCard" model="(Model.Camp, Model.User.Level)" />
+</div>
+
+<div class="engage-row">
+    <section class="card"><partial name="_GoalRing" model="Model.Goal" /></section>
+    <section class="card league-teaser">
+        <div>
+            <strong>@Model.WeeklyXp XP this week</strong>
+            <small class="muted">Climb the weekly league</small>
+        </div>
+        <a class="btn btn-outline btn-sm" asp-controller="League" asp-action="Index">League</a>
+    </section>
+    <section class="card freeze-card" title="Earn one every 7-day streak (max 2). Used automatically if you miss a day.">
+        <div>
+            <strong>@Model.User.StreakFreezes / 2 streak shields</strong>
+            <small class="muted">Saves your streak if you miss a day</small>
+        </div>
+        <span class="shield" aria-hidden="true">🛡️</span>
+    </section>
+</div>
+
+<partial name="_StatTiles" model="Model.Stats" />
+
+<section aria-labelledby="review-title">
+    <div class="row between">
+        <h2 id="review-title">Review today</h2>
+        @if (Model.ReviewToday.Count > 0)
+        {
+            <form asp-controller="Play" asp-action="Review" method="post">
+                <button type="submit" class="link-btn">Start review</button>
+            </form>
+        }
+    </div>
+    @if (Model.ReviewToday.Count == 0)
+    {
+        <p class="muted">Nothing to review today. Words you miss will come back here.</p>
+    }
+    else
+    {
+        <ul class="cards-row">
+            @foreach (var item in Model.ReviewToday)
+            {
+                <li class="card review-item">
+                    <div>
+                        <strong>@item.Text</strong>
+                        <small class="muted">Missed @Humanize.DaysAgo(item.LastMissedOn, Model.TodayDate)</small>
+                    </div>
+                    <span class="badge">@item.Level</span>
+                </li>
+            }
+        </ul>
+    }
+</section>

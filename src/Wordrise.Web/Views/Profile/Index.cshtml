@@ -1,0 +1,146 @@
+@model ProfileModel
+@{
+    ViewData["Title"] = "Profile";
+    ViewData["Section"] = "profile";
+}
+<header class="page-head">
+    <h1>Profile</h1>
+</header>
+
+@if (Model.Saved)
+{
+    <p class="flash" role="status">Settings saved. Your new level applies from your next daily word.</p>
+}
+
+<div class="grid-2">
+    <section class="card profile-card">
+        <span class="avatar avatar-lg" aria-hidden="true">@(Model.User.Name[..1].ToUpperInvariant())</span>
+        <h2>@Model.User.Name</h2>
+        <p class="muted">@Model.User.Email</p>
+        <p>Level @Model.User.Level · Camp: @Model.Camp.Current.Name</p>
+        <partial name="_StatTiles" model="Model.Stats" />
+    </section>
+
+    <section class="card" aria-labelledby="settings-title">
+        <h2 id="settings-title">Settings</h2>
+        <form asp-action="Index" method="post">
+            <fieldset class="field">
+                <legend>English level</legend>
+                <small class="muted">Used to pick your daily word. Today's round does not change.</small>
+                <div class="segmented">
+                    @foreach (var lvl in Enum.GetValues<CefrLevel>())
+                    {
+                        <label>
+                            <input type="radio" name="Settings.Level" value="@lvl" checked="@(Model.Settings.Level == lvl)" />
+                            <span>@lvl</span>
+                        </label>
+                    }
+                </div>
+                <span asp-validation-for="Settings.Level" class="field-error"></span>
+            </fieldset>
+
+            <div class="field switch">
+                <label for="audio">
+                    <strong>Pronunciation audio</strong>
+                    <small class="muted">Play the word aloud after each round</small>
+                </label>
+                <input type="checkbox" id="audio" name="Settings.PronunciationAudio" value="true" role="switch"
+                       checked="@Model.Settings.PronunciationAudio" />
+                <input type="hidden" name="Settings.PronunciationAudio" value="false" />
+            </div>
+
+            <div class="field switch">
+                <label for="goal">
+                    <strong>Daily goal</strong>
+                    <small class="muted">Words to finish each day, in any mode</small>
+                </label>
+                <select id="goal" name="Settings.DailyGoal">
+                    @foreach (var g in new[] { 1, 3, 5, 10, 15 })
+                    {
+                        if (Model.Settings.DailyGoal == g)
+                        {
+                            <option value="@g" selected>@g</option>
+                        }
+                        else
+                        {
+                            <option value="@g">@g</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="field switch">
+                <label for="sound">
+                    <strong>Sound effects</strong>
+                    <small class="muted">Tones when you type, guess and win</small>
+                </label>
+                <input type="checkbox" id="sound" name="Settings.SoundEnabled" value="true" role="switch"
+                       checked="@Model.Settings.SoundEnabled" />
+                <input type="hidden" name="Settings.SoundEnabled" value="false" />
+            </div>
+
+            <div class="field switch">
+                <label for="leagues">
+                    <strong>Show me in level leagues</strong>
+                    <small class="muted">Only your first name is shown. Groups always list their members.</small>
+                </label>
+                <input type="checkbox" id="leagues" name="Settings.ShowInLeagues" value="true" role="switch"
+                       checked="@Model.Settings.ShowInLeagues" />
+                <input type="hidden" name="Settings.ShowInLeagues" value="false" />
+            </div>
+
+            <div class="field switch">
+                <label for="theme-toggle">
+                    <strong>Dark mode</strong>
+                    <small class="muted">Saved on this device</small>
+                </label>
+                <input type="checkbox" id="theme-toggle" role="switch" data-theme-toggle />
+            </div>
+
+            <div class="field switch">
+                <span>
+                    <strong>Text size</strong>
+                    <small class="muted">Saved on this device</small>
+                </span>
+                <span class="row">
+                    <button type="button" class="btn btn-outline btn-sm" data-font-step="-1" aria-label="Smaller text">A−</button>
+                    <button type="button" class="btn btn-outline btn-sm" data-font-step="1" aria-label="Larger text">A+</button>
+                </span>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Save settings</button>
+        </form>
+    </section>
+</div>
+
+<section class="card" aria-labelledby="achievements-title">
+    <div class="row between">
+        <h2 id="achievements-title">Achievements</h2>
+        <span class="badge">@Model.Achievements.Count(a => a.Unlocked) / @Model.Achievements.Count</span>
+    </div>
+    <ul class="achievements">
+        @foreach (var a in Model.Achievements)
+        {
+            <li class="@(a.Unlocked ? "unlocked" : "locked")" title="@a.Description">
+                <span class="achievement-icon" aria-hidden="true">@a.Icon</span>
+                <strong>@a.Title</strong>
+                <small class="muted">@(a.Unlocked ? a.Description : $"Locked · {a.Description}")</small>
+            </li>
+        }
+    </ul>
+</section>
+
+<section class="card app-card" aria-labelledby="app-title">
+    <h2 id="app-title">Wordrise app</h2>
+    <p class="muted">Install Wordrise to open it from your home screen like any other app, in its own window.</p>
+    <button type="button" class="btn btn-primary" data-install hidden>Install app</button>
+    <p id="ios-install-hint" class="small" hidden>
+        On iPhone or iPad: tap <strong>Share</strong> in Safari, then <strong>Add to Home Screen</strong>.
+    </p>
+    <p id="installed-hint" class="small muted" hidden>You are using the installed app.</p>
+    <p class="small muted">Playing still needs an internet connection: your guesses are checked on the server.</p>
+</section>
+
+<form asp-controller="Account" asp-action="Logout" method="post" class="center">
+    <button type="submit" class="btn btn-outline">Log out</button>
+</form>

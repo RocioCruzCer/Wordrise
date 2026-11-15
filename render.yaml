@@ -1,0 +1,17 @@
+# Render Blueprint: web service (Docker) + managed PostgreSQL.
+services:
+  - type: web
+    name: wordrise
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: wordrise-db
+          property: connectionString
+databases:
+  - name: wordrise-db
+    plan: free
+    databaseName: wordrise

@@ -1,0 +1,18 @@
+@model LeagueBoard
+@if (Model.Top.Count == 0)
+{
+    <p class="muted">No XP yet this week. Play a word to be the first on the board.</p>
+}
+else
+{
+    <ol class="league-table">
+        @foreach (var e in Model.Top)
+        {
+            <li class="@(e.IsMe ? "me" : null)">
+                <span class="rank @(e.Rank <= 3 ? $"top{e.Rank}" : null)">@e.Rank</span>
+                <span class="name">@e.Name @(e.IsMe ? "(you)" : "")</span>
+                <span class="xp">@e.Xp XP</span>
+            </li>
+        }
+    </ol>
+}

@@ -1,0 +1,75 @@
+@model ProgressModel
+@{
+    ViewData["Title"] = "Progress";
+    ViewData["Section"] = "progress";
+    var max = Math.Max(Wordrise.Web.Domain.Game.GameRules.MaxAttempts, Model.LastSevenDays.Max(d => d.Attempts ?? 0));
+}
+<header class="page-head row between">
+    <div>
+        <h1>Your progress</h1>
+        <p class="muted">Keep rising, @Model.User.Name</p>
+    </div>
+    <div class="head-badges">
+        <partial name="_StreakChip" model="Model.Stats" />
+        <span class="badge">Best: @Model.Stats.BestStreak</span>
+    </div>
+</header>
+
+@if (Model.Stats.RoundsFinished == 0)
+{
+    <section class="card empty">
+        <p>You have not played yet. Every climb starts with one word.</p>
+        <form asp-controller="Play" asp-action="Today" method="post">
+            <button type="submit" class="btn btn-accent">Play today's word</button>
+        </form>
+    </section>
+}
+
+<div class="grid-hero">
+    <partial name="_CampCard" model="(Model.Camp, Model.User.Level)" />
+    <partial name="_StatTiles" model="Model.Stats" />
+</div>
+
+<div class="grid-2">
+    <section class="card" aria-labelledby="chart-title">
+        <h2 id="chart-title">Attempts needed, last 7 days</h2>
+        <figure class="bar-chart">
+            <ol>
+                @foreach (var day in Model.LastSevenDays)
+                {
+                    var height = day.Attempts is null ? 0 : day.Attempts.Value * 100 / max;
+                    var label = day.Attempts is null ? "not played" : $"{day.Attempts} attempts";
+                    <li class="@(day.IsToday ? "today" : null)" aria-label="@day.Date.DayOfWeek: @label">
+                        <span class="bar-value" aria-hidden="true">@(day.Attempts?.ToString() ?? "–")</span>
+                        <span class="bar" style="height:@(height)%" aria-hidden="true"></span>
+                        <span class="bar-label" aria-hidden="true">@(day.Date.DayOfWeek.ToString()[..3])</span>
+                    </li>
+                }
+            </ol>
+            <figcaption class="sr-only">Number of attempts needed for each daily word over the last seven days. Today is highlighted.</figcaption>
+        </figure>
+    </section>
+
+    <section class="card" aria-labelledby="notebook-title">
+        <div class="row between">
+            <h2 id="notebook-title">Notebook of peaks</h2>
+            <a asp-action="Notebook">See all</a>
+        </div>
+        @if (Model.Notebook.Count == 0)
+        {
+            <p class="muted">Words you guess will be saved here.</p>
+        }
+        else
+        {
+            <ul class="notebook">
+                @foreach (var item in Model.Notebook)
+                {
+                    <li>
+                        <div><strong>@item.Text</strong> <span class="badge">@item.Level</span></div>
+                        <small class="muted">@item.Definition</small>
+                    </li>
+                }
+            </ul>
+        }
+    </section>
+</div>

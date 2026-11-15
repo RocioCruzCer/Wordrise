@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Wordrise.Web/Wordrise.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Wordrise.Tests/Wordrise.Tests.csproj" />
+  </Folder>
+</Solution>

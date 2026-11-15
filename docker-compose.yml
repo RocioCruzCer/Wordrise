@@ -1,0 +1,15 @@
+# Local development database only. Not used on Render.
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: wordrise
+      POSTGRES_USER: wordrise
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-wordrise_dev}
+    ports:
+      # Host port 55432 avoids clashing with PostgreSQL installed on Windows (5432/5433).
+      - "${POSTGRES_PORT:-55432}:5432"
+    volumes:
+      - wordrise-db:/var/lib/postgresql/data
+volumes:
+  wordrise-db:

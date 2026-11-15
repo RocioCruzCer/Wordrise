@@ -1,0 +1,29 @@
+@model GroupPageModel
+@{
+    ViewData["Title"] = Model.Group.Name;
+    ViewData["Section"] = "league";
+    var week = Model.Board.Week;
+}
+<header class="page-head row between">
+    <div class="row">
+        <a class="icon-btn" asp-action="Index" aria-label="Back to League">&larr;</a>
+        <div>
+            <h1>@Model.Group.Name</h1>
+            <p class="muted">@week.Start.ToString("MMM d") – @week.End.ToString("MMM d")</p>
+        </div>
+    </div>
+    <button type="button" class="btn btn-outline btn-sm" data-copy="@Model.Group.Code">Code: @Model.Group.Code</button>
+</header>
+
+<section class="card" aria-labelledby="board-title">
+    <h2 id="board-title" class="sr-only">Ranking</h2>
+    <partial name="_LeagueTable" model="Model.Board" />
+</section>
+
+<form asp-action="Leave" asp-route-id="@Model.Group.Id" method="post" class="center" data-confirm="Leave this group?">
+    <button type="submit" class="link-btn">Leave group</button>
+</form>
+
+@section Scripts {
+    <script src="~/js/league.js" asp-append-version="true"></script>
+}

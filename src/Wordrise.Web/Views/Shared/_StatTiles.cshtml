@@ -1,0 +1,7 @@
+@model UserStats
+<ul class="stats" aria-label="Your stats">
+    <li class="stat"><strong>@Model.WordsLearned</strong><span>Words learned</span></li>
+    <li class="stat"><strong>@Model.AccuracyPercent%</strong><span>Accuracy</span></li>
+    <li class="stat"><strong>@Model.AverageAttempts.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)</strong><span>Avg. attempts</span></li>
+    <li class="stat"><strong>@Model.ToReview</strong><span>To review</span></li>
+</ul>

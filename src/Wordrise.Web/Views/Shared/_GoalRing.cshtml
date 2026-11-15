@@ -1,0 +1,19 @@
+@model GoalProgress
+@{
+    const double radius = 26;
+    var circumference = 2 * Math.PI * radius;
+    var offset = circumference * (1 - Model.Percent / 100.0);
+    string F(double v) => v.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+}
+<div class="goal-ring @(Model.Met ? "met" : null)">
+    <svg width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Daily goal: @Model.Done of @Model.Target words">
+        <circle cx="32" cy="32" r="@F(radius)" class="ring-bg" />
+        <circle cx="32" cy="32" r="@F(radius)" class="ring-fg"
+                stroke-dasharray="@F(circumference)" stroke-dashoffset="@F(offset)" transform="rotate(-90 32 32)" />
+        <text x="32" y="37" text-anchor="middle">@(Model.Met ? "✓" : $"{Math.Min(Model.Done, Model.Target)}/{Model.Target}")</text>
+    </svg>
+    <div>
+        <strong>@(Model.Met ? "Daily goal reached!" : "Daily goal")</strong>
+        <small class="muted">@Model.Done of @Model.Target words today</small>
+    </div>
+</div>

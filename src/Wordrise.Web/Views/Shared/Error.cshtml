@@ -1,0 +1,16 @@
+@model int
+@{
+    ViewData["Title"] = "Something went wrong";
+    var message = Model switch
+    {
+        404 => "We could not find that page.",
+        403 => "You do not have access to this page.",
+        429 => "Too many requests. Wait a moment and try again.",
+        _ => "Something went wrong on our side. Please try again."
+    };
+}
+<section class="card narrow center">
+    <h1>Oops</h1>
+    <p>@message</p>
+    <a class="btn btn-primary" href="/">Back to Home</a>
+</section>

@@ -1,0 +1,62 @@
+@model SprintPageModel
+@{
+    ViewData["Title"] = "Sprint";
+    ViewData["Section"] = "play";
+    var s = Model.Sprint;
+}
+<div class="sprint" data-sprint-id="@s.Id" data-sound="@(Model.SoundEnabled ? "on" : "off")">
+    @Html.AntiForgeryToken()
+    <script id="sprint-state" type="application/json">@Json.Serialize(s)</script>
+
+    <header class="page-head row between">
+        <div class="row">
+            <a class="icon-btn" asp-controller="Play" asp-action="Index" aria-label="Back to Play">&larr;</a>
+            <h1>Sprint</h1>
+            <span class="badge">@s.Level</span>
+        </div>
+        <span class="badge" aria-live="polite">Best: <span id="best">@s.BestScore</span></span>
+    </header>
+
+    <noscript><p class="flash">Wordrise needs JavaScript enabled to play.</p></noscript>
+
+    <section id="sprint-play" class="card sprint-card" aria-labelledby="sprint-title">
+        <div class="sprint-top">
+            <span class="sprint-score" aria-live="polite"><strong id="score">0</strong> words</span>
+            <span class="sprint-time"><strong id="time">60</strong>s</span>
+        </div>
+        <div class="timer-bar" aria-hidden="true"><span id="timer-fill"></span></div>
+
+        <h2 id="sprint-title" class="sr-only">Unscramble the word</h2>
+        <p class="eyebrow" id="pos"></p>
+        <p class="sprint-definition" id="definition"></p>
+        <div class="sprint-letters" id="letters" aria-label="Scrambled letters"></div>
+
+        <form id="answer-form" class="sprint-form" autocomplete="off">
+            <label for="answer" class="sr-only">Your answer</label>
+            <input id="answer" name="answer" type="text" inputmode="text" autocapitalize="none" spellcheck="false"
+                   maxlength="10" placeholder="Type the word" required />
+            <button type="submit" class="btn btn-accent">Check</button>
+            <button type="button" id="skip" class="btn btn-outline">Skip</button>
+        </form>
+        <p id="sprint-message" class="message" role="status" aria-live="assertive"></p>
+    </section>
+
+    <section id="sprint-result" class="card result" hidden tabindex="-1" aria-labelledby="sprint-result-title">
+        <p class="eyebrow">Time!</p>
+        <h2 id="sprint-result-title"><span id="final-score">0</span> words solved</h2>
+        <div id="sprint-progress" class="chips" aria-live="polite"></div>
+        <ul id="sprint-words" class="sprint-words"></ul>
+        <div class="result-actions">
+            <form asp-controller="Play" asp-action="Sprint" method="post">
+                <input type="hidden" name="level" value="@s.Level" />
+                <button type="submit" class="btn btn-accent btn-block" id="again">Play again</button>
+            </form>
+            <a class="btn btn-outline btn-block" asp-controller="Play" asp-action="Index">Back to Play</a>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <script src="~/js/fx.js" asp-append-version="true"></script>
+    <script src="~/js/sprint.js" asp-append-version="true"></script>
+}
